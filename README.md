@@ -1,4 +1,4 @@
-# op2000
+# op2001
 Groovebox (synth, sampler, sequencer) based on a Teensy 4
 
 Inspired by the OP-1, Elektron Digi... devices and the many different DIY/Opensource Teensy synths.
