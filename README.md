@@ -15,7 +15,7 @@ Inspired by the OP-1, Elektron Digi... devices and the many different DIY/Openso
 * Load samples from SD card or audio board flash
 
 ## MIDI
-* USB MIDI input and output via Teensy USB (as a USB peripheral)
+* USB MIDI input and output via Micro USB (as a USB peripheral)
 ** send MIDI notes and CC from the OP sequencer to a PC (e.g. to play and control a software synth engine)
 ** receive MIDI notes and CC from a PC (e.g. from tracks in a DAW)
 * USB host: uses MAX3421E chip to 
@@ -24,9 +24,18 @@ Inspired by the OP-1, Elektron Digi... devices and the many different DIY/Openso
 * Headphone/line out ports (1/8")
 * Line in port (1/8") for sampling and recording
 * Mini MIDI in and out via TRS (1/8") (type can be adjusted internally)
-* Big 320x240 2.8" color TFT
+* 220x176 2" color TFT (ILI9225 driver chipset)
 * 4 rotary (endless) encoders with integrated buttons for input
 * Mechanical keys for button inputs (play/stop, track selection, track mute, ...)
+
+# Implementation
+* Teensy 4.0 with audio board for synth and sample playback
+* SD card and flash memory access via audio board (load and record samples)
+* Rotary encoder and button inputs via ATmega328p co-processor on I2C bus (up to 8 encoders and 8 buttons)
+* ESP32 for additional hardware and network I/O and for offloading TFT rendering, network handling from Teensy:
+** controls the TFT via SPI
+** provides HTTP API (possibly debug only) and Bluetooth connectivity (TBD later)
+** drives WS2812 RGB LEDs
 
 # Resources
 * https://www.pjrc.com/store/teensy40.html
