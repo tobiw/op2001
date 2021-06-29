@@ -37,6 +37,12 @@ Inspired by the OP-1, Elektron Digi... devices and the many different DIY/Openso
 ** provides HTTP API (possibly debug only) and Bluetooth connectivity (TBD later)
 ** drives WS2812 RGB LEDs
 
+## Development
+All source code and project files are managed with PlatformIO [https://docs.platformio.org]. Each subdirectory contains the project files (platformio.ini), source code and unit tests for each MCU. They have been named to indicate their main function rather than what chip is being used in case parts change during development:
+* audio_dsp_io: Main MCU doing all the DSP, I2S output; communicates with other MCUs for user input and display/LED output via I2C or UART
+* encoders_board: separate input board handling rotary encoders and buttons (up to 8 with an ATmega328p); acts as I2C slave to communicate with DSP
+* output_mcu: co-processor handling TFT output as well as WiFi and Bluetooth (if ESP32 is being used); communicates with DSP via UART
+
 # Resources
 * https://www.pjrc.com/store/teensy40.html
 * https://www.pjrc.com/store/teensy3_audio.html
