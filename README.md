@@ -43,6 +43,12 @@ All source code and project files are managed with PlatformIO [https://docs.plat
 * encoders_board: separate input board handling rotary encoders and buttons (up to 8 with an ATmega328p); acts as I2C slave to communicate with DSP
 * output_mcu: co-processor handling TFT output as well as WiFi and Bluetooth (if ESP32 is being used); communicates with DSP via UART
 
+### Install and setup development environment
+* Install platformio as per https://docs.platformio.org/en/latest/core/installation.html
+* Clone op2001 repository
+* Go into each MCU subdirectory and execute `pio run` (this will download and install all necessary platforms (arduino), boards (espressif32, etc) and libraries)
+* Upload to MCU with `pio run -t upload` (via USB for ESP32 and Teensy, or via avrdude usbasp programmer for ATmega)
+
 # Resources
 * https://www.pjrc.com/store/teensy40.html
 * https://www.pjrc.com/store/teensy3_audio.html
