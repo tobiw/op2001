@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include <mcu_comm.h>
 
 #define MCU_UART Serial2
@@ -57,16 +58,25 @@ void debug_print_received_msg(const char *type, int a, int b) {
     Serial.println(b);
 }
 
-void McuCommUart::parse_uart(int *enc_values, bool *enc_updated, bool *button_states, bool *button_updated) {
+/*
+ * non-blocking, i.e. will process one character per call and only parse the message if a full message has been buffered,
+ * rather than looping and receiving the full message in one call.
+ */
+void McuCommUart::parse_uart(int *enc_values, bool *enc_updated, bool *button_states, bool *button_updated, int num_inputs) {
+    receive_uart();
+    if (!msg_received) return;
+
     if (rx_buf[0] == 'e') {
         msg_received = false;
         int enc, enc_value;
         sscanf(rx_buf, "e%d:%d;", &enc, &enc_value);
         debug_print_received_msg("enc", enc, enc_value);
 
-        if (enc >= 0 && enc <= 3) {
+        if (enc >= 0 && enc < num_inputs) {
             enc_values[enc] = enc_value <= 127 ? enc_value : 127;
             enc_updated[enc] = true;
+            Serial.print("enc updated: ");
+            Serial.println(enc);
         }
     } else if (rx_buf[0] == 'b') {
         msg_received = false;
@@ -74,7 +84,7 @@ void McuCommUart::parse_uart(int *enc_values, bool *enc_updated, bool *button_st
         sscanf(rx_buf, "b%d:%d;", &btn, &btn_state);
         debug_print_received_msg("btn", btn, btn_state);
 
-        if (btn >= 0 && btn <= 3) {
+        if (btn >= 0 && btn <= num_inputs) {
             button_states[btn] = btn_state;
             button_updated[btn] = true;
         }
@@ -86,3 +96,47 @@ void McuCommUart::flush_rx_buffer() {
     while (MCU_UART.available() > 0) { MCU_UART.read(); }
 }
 
+
+
+McuCommI2c::McuCommI2c() {
+    memset(prev_enc_values, 0, sizeof (int) * 8);
+    memset(prev_button_states, 0, sizeof (bool) * 8);
+}
+
+void McuCommI2c::begin() {
+    //Wire.begin();
+}
+
+void McuCommI2c::request_encoders_buttons(int *enc_values, bool *enc_updated, bool *button_states, bool *button_updated, int num_inputs) {
+    Wire.requestFrom(McuCommI2c::I2C_SLAVE_ENCODERS, 9);
+
+    byte b[9] = {};
+    int i = 0;
+
+    while (Wire.available()) {
+        b[i++] = Wire.read();
+    }
+
+    enc_values[0] = (b[0] << 8) | b[1];
+    enc_values[1] = (b[2] << 8) | b[3];
+    enc_values[2] = (b[4] << 8) | b[5];
+    enc_values[3] = (b[6] << 8) | b[7];
+    enc_values[4] = enc_values[5] = enc_values[6] = enc_values[7] = 0;
+
+    for (int i = 0; i < num_inputs; i++) {
+        if (enc_values[i] != prev_enc_values[i]) {
+            enc_updated[i] = true;
+            prev_enc_values[i] = enc_values[i];
+        }
+        if (button_states[i] != prev_button_states[i]) {
+            button_updated[i] = true;
+            prev_button_states[i] = button_states[i];
+        }
+    }
+
+    button_states[0] = (b[8] & 8) >> 3;
+    button_states[1] = (b[8] & 4) >> 2;
+    button_states[2] = (b[8] & 2) >> 1;
+    button_states[3] = b[8] & 1;
+    button_states[4] = button_states[5] = button_states[6] = button_states[7] = 1; // HIGH = not pressed
+}
