@@ -222,8 +222,8 @@ void loop() {
   myusb.Task();
   midi1.read();
   
-  request_receive_i2c(pos, buttons);
-  update_inputs();
+  //request_receive_i2c(pos, buttons);
+  //update_inputs(); // TODO: from received UART message instead of I2C request
   
   play_notes_sequence();
 }
