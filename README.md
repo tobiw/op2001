@@ -56,6 +56,7 @@ All source code and project files are managed with PlatformIO [https://docs.plat
 * https://www.pjrc.com/teensy/td_midi.html
 * https://www.pjrc.com/teensy/gui/index.html
 * https://minimidi.world/
+* https://github.com/Nkawu/TFT_22_ILI9225/wiki
 
 ## Datasheets
 * https://datasheets.maximintegrated.com/en/ds/MAX3421E.pdf
