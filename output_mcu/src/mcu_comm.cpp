@@ -104,7 +104,7 @@ McuCommI2c::McuCommI2c() {
 }
 
 void McuCommI2c::begin() {
-    //Wire.begin();
+    Wire.begin(); // default I2C pins: 21, 22
 }
 
 void McuCommI2c::request_encoders_buttons(int *enc_values, bool *enc_updated, bool *button_states, bool *button_updated, int num_inputs) {
@@ -115,6 +115,7 @@ void McuCommI2c::request_encoders_buttons(int *enc_values, bool *enc_updated, bo
 
     while (Wire.available()) {
         b[i++] = Wire.read();
+        Serial.println(b[i-1]);
     }
 
     enc_values[0] = (b[0] << 8) | b[1];

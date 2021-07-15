@@ -2,13 +2,6 @@
 
 #include <tft_gui.h>
 #include <mcu_comm.h>
-#include <data.h>
-
-// Internal state, data objects
-Mixer mixer;
-Synth synth[2];
-Sampler sampler;
-Sequencer sequencer;
 
 // Interface to the hardware TFT display
 TftGui tft;
@@ -255,9 +248,9 @@ void loop() {
     mcu_comm_encboard.request_encoders_buttons(enc_values, enc_updated, button_states, button_updated, NUM_ENCODERS); // get data from encoder board via I2C
 
     if (data_update_required(enc_updated, button_updated)) {
-        Serial.println("Calling GUI update_data");
-        gui.update_data(enc_values, button_states);
-        gui.render();
+        //Serial.println("Calling GUI update_data");
+        //gui.update_data(enc_values, button_states);
+        //gui.render();
     }
 
     // TODO: optimisation to only redraw part that requires an update (e.g. one bar or button)
