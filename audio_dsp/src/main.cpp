@@ -3,34 +3,26 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
-#include "USBHost_t36.h"
+//#include "USBHost_t36.h"
+#include "sid_synth.h"
 
-USBHost myusb;
+/*USBHost myusb;
 USBHub hub1(myusb);
 USBHub hub2(myusb);
 USBHub hub3(myusb);
 KeyboardController keyboard1(myusb);
 KeyboardController keyboard2(myusb);
-MIDIDevice midi1(myusb);
+MIDIDevice midi1(myusb);*/
 
 // GUItool: begin automatically generated code
-AudioSynthWaveformSine   sine1;          //xy=86,329
-AudioSynthWaveformSine   sine2;          //xy=88,401
-AudioSynthSimpleDrum     drum1;          //xy=90,472
-AudioMixer4              mixer1;         //xy=310,404
-AudioFilterStateVariable filter1;        //xy=475,399
-AudioEffectEnvelope      envelope1;      //xy=660,398
-AudioOutputI2S           i2s1;           //xy=828,397
-AudioConnection          patchCord1(sine1, 0, mixer1, 0);
-AudioConnection          patchCord2(sine2, 0, mixer1, 1);
-AudioConnection          patchCord3(drum1, 0, mixer1, 2);
-AudioConnection          patchCord4(mixer1, 0, filter1, 0);
-AudioConnection          patchCord5(filter1, 0, envelope1, 0);
-AudioConnection          patchCord6(envelope1, 0, i2s1, 0);
-AudioConnection          patchCord7(envelope1, 0, i2s1, 1);
-AudioControlSGTL5000     sgtl5000_1;     //xy=155,215
+AudioPlaySID             playSID;  //xy=189,110
+AudioOutputI2S           i2s1;           //xy=366,111
+AudioConnection          patchCord1(playSID, 0, i2s1, 0);
+AudioConnection          patchCord2(playSID, 0, i2s1, 1);
+AudioControlSGTL5000     sgtl5000_1;     //xy=354,176
 // GUItool: end automatically generated code
 
+MOS6581 sid_synth(&playSID);
 
 void OnPress(int key)
 {
@@ -121,41 +113,57 @@ void setup() {
   // Audio board setup
   AudioMemory(512);
   sgtl5000_1.enable();
-  sgtl5000_1.volume(0.5);
+  sgtl5000_1.volume(0.2);
 
   // Synth setup
-  drum1.frequency(110);
+  /*drum1.frequency(110);
   sine1.frequency(440);
   sine1.amplitude(0.6);
   sine2.frequency(440);
-  sine2.amplitude(0.4);
+  sine2.amplitude(0.4);*/
 
   // USB host shield setup
-  myusb.begin();
+  /*myusb.begin();
   keyboard1.attachPress(OnPress);
   keyboard1.attachRawPress(OnRawPress);
   keyboard1.attachRawRelease(OnRawRelease);
   keyboard2.attachPress(OnPress);
   midi1.setHandleNoteOff(OnNoteOff);
   midi1.setHandleNoteOn(OnNoteOn);
-  midi1.setHandleControlChange(OnControlChange);
+  midi1.setHandleControlChange(OnControlChange);*/
+
+  sid_synth.volume(0xf);
+  sid_synth.setMode(0, SID_SQUARE);
+  sid_synth.setPulseWidth(0, 1024);
+  sid_synth.setVoice(0, true);
+  sid_synth.setADEnvelope(0, 0, 0);
+  sid_synth.setSREnvelope(0, 15, 0);
+  sid_synth.setFilter(0, false);
+  sid_synth.setMode(1, SID_RAMP);
+  sid_synth.setVoice(1, true);
+  sid_synth.setADEnvelope(1, 5, 0);
+  sid_synth.setSREnvelope(1, 15, 0);
+  sid_synth.setFilter(1, false);
+
+  sid_synth.setVoice(0, false);
+  sid_synth.setVoice(1, false);
 }
 
 int pos[8], prev_pos[8];
 uint8_t buttons[8], prev_buttons[8];
 bool pos_update[8], button_update[8];
 
-void set_osc_freq(int i) {
+/*void set_osc_freq(int i) {
   static AudioSynthWaveformSine *sine_ptr[2] = { &sine1, &sine2 };
   const int freq = 200 + (pos[i] * 10);
   Serial.println("Setting freq to "); Serial.println(freq);
   sine_ptr[i]->frequency(freq); 
-}
+}*/
 
 void on_pos_update(int i) {
   Serial.println(pos[0]);
 
-  set_osc_freq(i);
+  //set_osc_freq(i);
 
   char buf[8];
   sprintf(buf, "e%d:%d;\r\n", i, pos[i]);
@@ -188,7 +196,7 @@ uint32_t cur_seq_step = 0;
 uint32_t last_note = 0;
 bool note_on_sent = false;
 
-void play_notes_sequence() {
+/*void play_notes_sequence() {
   uint32_t t = millis();
   if (t - last_note > 1200) {
     envelope1.noteOff();
@@ -216,16 +224,70 @@ void play_drum_sequence() {
   delay(beat8);
   drum1.noteOn();
   delay(beat8);
+}*/
+
+#define NOTE0(x) sid_synth.setFrequency(0, x); sid_synth.setVoice(0, true); delay(20); sid_synth.setVoice(0, false);
+#define NOTE(x) sid_synth.setFrequency(0, x); sid_synth.setFrequency(1, x << 4); delay(100);
+#define MAJ_CHORD(x) sid_synth.setFrequency(0, x); delay(20); sid_synth.setFrequency(0, x+570); delay(20); sid_synth.setFrequency(0, x+1093); delay(20); sid_synth.setFrequency(0, x+2194); delay(20);
+#define MIN_CHORD(x) sid_synth.setFrequency(0, x); delay(20); sid_synth.setFrequency(0, x+415); delay(20); sid_synth.setFrequency(0, x+1093); delay(20); sid_synth.setFrequency(0, x+2194); delay(20);
+
+void play_sid_sequence() {
+    for (int i = 0; i < 20; i++) {
+        NOTE0(4389);
+        NOTE0(5530); // maj
+        NOTE0(6577);
+    }
+
+    delay(500);
+
+    for (int i = 0; i < 20; i++) {
+        NOTE0(4389);
+        NOTE0(5220); // min
+        NOTE0(6577);
+    }
+    return;
+
+    NOTE(1000);
+    NOTE(1);
+    NOTE(1000);
+    NOTE(1);
+    NOTE(2000);
+    NOTE(1000);
+    NOTE(3000);
+    NOTE(1000);
+    NOTE(4000);
+    NOTE(2000);
+    NOTE(4000);
+    sid_synth.setVoice(1, false);
+    for (int i = 0; i < 30; i++) {
+        sid_synth.setPulseWidth(0, 200);
+        delay(40);
+        sid_synth.setPulseWidth(0, 2048);
+        delay(40);
+    }
+    delay(500);
+    for (int i = 0; i < 30; i++) {
+        MAJ_CHORD(2195);
+    }
+    sid_synth.setVoice(0, false);
+    delay(500);
+    sid_synth.setVoice(0, true);
+    for (int i = 0; i < 30; i++) {
+        MIN_CHORD(2195);
+    }
+    sid_synth.setVoice(0, false);
 }
 
 void loop() {
-  myusb.Task();
-  midi1.read();
+  /*myusb.Task();
+  midi1.read();*/
   
   //request_receive_i2c(pos, buttons);
   //update_inputs(); // TODO: from received UART message instead of I2C request
   
-  play_notes_sequence();
+  play_sid_sequence();
+
+  delay(1000);
 }
 
 
